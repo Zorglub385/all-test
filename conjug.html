@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conjugaison Verbe</title>
+  <style>
+    #conjugation-table {
+      display: none;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    #download-button {
+      display: none;
+    }
+
+    #error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+    <h2>Rechercher un verbe :</h2>
+
+  <label for="search-bar">Rechercher un verbe:</label>
+  <input type="text" id="search-bar" oninput="searchVerb()">
+  <p id="error-message"></p>
+  
+  <div id="conjugation-table">
+    <h2>Conjugaison du verbe <span id="verb-title"></span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Présent</th>
+          <th>Imparfait</th>
+          <th>Passé Simple</th>
+          <th>Plus Que Parfait</th>
+          <th>Passé Composé</th>
+          <th>Futur</th>
+        </tr>
+      </thead>
+      <tbody id="conjugation-body">
+        <!-- Le tableau de conjugaison sera généré ici -->
+      </tbody>
+    </table>
+  </div>
+
+  <button id="download-button" onclick="downloadImage()">Télécharger l'image</button>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    // Exemple de quelques verbes avec leur conjugaison
+    const verbData = {
+      travailler: {
+        je: ['travaille', 'travaillais', 'travaillai', 'avais travaillé', 'ai travaillé', 'travaillerai'],
+        tu: ['travailles', 'travaillais', 'travaillas', 'avais travaillé', 'as travaillé', 'travailleras'],
+        il: ['travaille', 'travaillait', 'travailla', 'avait travaillé', 'a travaillé', 'travaillera'],
+        nous: ['travaillons', 'travaillions', 'travaillâmes', 'avions travaillé', 'avons travaillé', 'travaillerons'],
+        vous: ['travaillez', 'travailliez', 'travaillâtes', 'aviez travaillé', 'avez travaillé', 'travaillerez'],
+        ils: ['travaillent', 'travaillaient', 'travaillèrent', 'avaient travaillé', 'ont travaillé', 'travailleront']
+      },
+      être: {
+        je: ['suis', 'étais', 'fus', 'avais été', 'ai été', 'serai'],
+        tu: ['es', 'étais', 'fus', 'avais été', 'as été', 'seras'],
+        il: ['est', 'était', 'fut', 'avait été', 'a été', 'sera'],
+        nous: ['sommes', 'étions', 'fûmes', 'avions été', 'avons été', 'serons'],
+        vous: ['êtes', 'étiez', 'fûtes', 'aviez été', 'avez été', 'serez'],
+        ils: ['sont', 'étaient', 'furent', 'avaient été', 'ont été', 'seront']
+      },
+      avoir: {
+        je: ['ai', 'avais', 'eus', 'avais eu', 'ai eu', 'aurai'],
+        tu: ['as', 'avais', 'eus', 'avais eu', 'as eu', 'auras'],
+        il: ['a', 'avait', 'eut', 'avait eu', 'a eu', 'aura'],
+        nous: ['avons', 'avions', 'eûmes', 'avions eu', 'avons eu', 'aurons'],
+        vous: ['avez', 'aviez', 'eûtes', 'aviez eu', 'avez eu', 'aurez'],
+        ils: ['ont', 'avaient', 'eurent', 'avaient eu', 'ont eu', 'auront']
+      },
+      réussir: {
+        je: ['réussis', 'réussissais', 'réussis', 'avais réussi', 'ai réussi', 'réussirai'],
+        tu: ['réussis', 'réussissais', 'réussis', 'avais réussi', 'as réussi', 'réussiras'],
+        il: ['réussit', 'réussissait', 'réussit', 'avait réussi', 'a réussi', 'réussira'],
+        nous: ['réussissons', 'réussissions', 'réussîmes', 'avions réussi', 'avons réussi', 'réussirons'],
+        vous: ['réussissez', 'réussissiez', 'réussîtes', 'aviez réussi', 'avez réussi', 'réussirez'],
+        ils: ['réussissent', 'réussissaient', 'réussirent', 'avaient réussi', 'ont réussi', 'réussiront']
+      },
+      ranger: {
+        je: ['range', 'rangeais', 'rangeai', 'avais rangé', 'ai rangé', 'rangerai'],
+        tu: ['ranges', 'rangeais', 'rangeas', 'avais rangé', 'as rangé', 'rangeras'],
+        il: ['range', 'rangeait', 'rangea', 'avait rangé', 'a rangé', 'rangera'],
+        nous: ['rangeons', 'rangions', 'rangeâmes', 'avions rangé', 'avons rangé', 'rangerons'],
+        vous: ['rangez', 'rangiez', 'rangeâtes', 'aviez rangé', 'avez rangé', 'rangerez'],
+        ils: ['rangent', 'rangeaient', 'rangèrent', 'avaient rangé', 'ont rangé', 'rangeront']
+      },
+      lancer: {
+        je: ['lance', 'lançais', 'lançai', 'avais lancé', 'ai lancé', 'lancerai'],
+        tu: ['lances', 'lançais', 'lanças', 'avais lancé', 'as lancé', 'lanceras'],
+        il: ['lance', 'lançait', 'lança', 'avait lancé', 'a lancé', 'lancera'],
+        nous: ['lançons', 'lançions', 'lançâmes', 'avions lancé', 'avons lancé', 'lancerons'],
+        vous: ['lançez', 'lançiez', 'lançâtes', 'aviez lancé', 'avez lancé', 'lancerez'],
+        ils: ['lancent', 'lançaient', 'lancèrent', 'avaient lancé', 'ont lancé', 'lanceront']
+      },
+      acheter: {
+        je: ['achete', 'achetais', 'achetai', 'avais acheté', 'ai acheté', 'achèterai'],
+        tu: ['achetes', 'achetais', 'achetas', 'avais acheté', 'as acheté', 'achèteras'],
+        il: ['achete', 'achetait', 'acheta', 'avait acheté', 'a acheté', 'achètera'],
+        nous: ['achetons', 'achetions', 'achetâmes', 'avions acheté', 'avons acheté', 'achèterons'],
+        vous: ['achetez', 'achetiez', 'achetâtes', 'aviez acheté', 'avez acheté', 'achèterez'],
+        ils: ['achetent', 'achetaient', 'achetèrent', 'avaient acheté', 'ont acheté', 'achèteront']
+      },
+      jeter: {
+        je: ['jette', 'jetais', 'jetai', 'avais jeté', 'ai jeté', 'jetterai'],
+        tu: ['jettes', 'jetais', 'jetas', 'avais jeté', 'as jeté', 'jetteras'],
+        il: ['jette', 'jetait', 'jeta', 'avait jeté', 'a jeté', 'jettera'],
+        nous: ['jettons', 'jetions', 'jetâmes', 'avions jeté', 'avons jeté', 'jetterons'],
+        vous: ['jettez', 'jetiez', 'jetâtes', 'aviez jeté', 'avez jeté', 'jetterez'],
+        ils: ['jettent', 'jetaient', 'jetèrent', 'avaient jeté', 'ont jeté', 'jetteront']
+      },
+      appeler: {
+        je: ['appelle', 'appelais', 'appelai', 'avais appelé', 'ai appelé', 'appellerai'],
+        tu: ['appelles', 'appelais', 'appelas', 'avais appelé', 'as appelé', 'appelleras'],
+        il: ['appelle', 'appelait', 'appela', 'avait appelé', 'a appelé', 'appellera'],
+        nous: ['appelons', 'appelions', 'appelâmes', 'avions appelé', 'avons appelé', 'appellerons'],
+        vous: ['appelez', 'appeliez', 'appelâtes', 'aviez appelé', 'avez appelé', 'appellerez'],
+        ils: ['appellent', 'appelaient', 'appelèrent', 'avaient appelé', 'ont appelé', 'appelleront']
+      },
+      payer: {
+        je: ['paye', 'payais', 'payai', 'avais payé', 'ai payé', 'payerai'],
+        tu: ['payes', 'payais', 'payas', 'avais payé', 'as payé', 'payeras'],
+        il: ['paye', 'payait', 'paya', 'avait payé', 'a payé', 'payera'],
+        nous: ['payons', 'payions', 'payâmes', 'avions payé', 'avons payé', 'payerons'],
+        vous: ['payez', 'payiez', 'payâtes', 'aviez payé', 'avez payé', 'payerez'],
+        ils: ['payent', 'payaient', 'payèrent', 'avaient payé', 'ont payé', 'payeront']
+      },
+      entendre: {
+        je: ['entends', 'entendais', 'entendai', 'avais entendu', 'ai entendu', 'entenderai'],
+        tu: ['entends', 'entendais', 'entendas', 'avais entendu', 'as entendu', 'entenderas'],
+        il: ['entend', 'entendait', 'entenda', 'avait entendu', 'a entendu', 'entendera'],
+        nous: ['entendons', 'entendions', 'entendâmes', 'avions entendu', 'avons entendu', 'entenderons'],
+        vous: ['entendez', 'entendiez', 'entendâtes', 'aviez entendu', 'avez entendu', 'entenderez'],
+        ils: ['entendent', 'entendaient', 'entendèrent', 'avaient entendu', 'ont entendu', 'entenderont']
+      },
+      faire: {
+        je: ['fais', 'faisais', 'fis', 'avais fait', 'ai fait', 'ferai'],
+        tu: ['fais', 'faisais', 'fis', 'avais fait', 'as fait', 'feras'],
+        il: ['fait', 'faisait', 'fit', 'avait fait', 'a fait', 'fera'],
+        nous: ['faisons', 'faisions', 'fîmes', 'avions fait', 'avons fait', 'ferons'],
+        vous: ['faîtes', 'faisiez', 'fîtes', 'aviez fait', 'avez fait', 'ferez'],
+        ils: ['font', 'faisaient', 'firent', 'avaient fait', 'ont fait', 'feront']
+      },
+      dire: {
+        je: ['dis', 'disais', 'dis', 'avais dit', 'ai dit', 'dirai'],
+        tu: ['dis', 'disais', 'dis', 'avais dit', 'as dit', 'diras'],
+        il: ['dit', 'disait', 'dit', 'avait dit', 'a dit', 'dira'],
+        nous: ['disons', 'disions', 'dîmes', 'avions dit', 'avons dit', 'dirons'],
+        vous: ['dîtes', 'disiez', 'dîtes', 'aviez dit', 'avez dit', 'direz'],
+        ils: ['disent', 'disaient', 'dirent', 'avaient dit', 'ont dit', 'diront']
+      },
+      pouvoir: {
+        je: ['peux', 'pouvais', 'pus', 'avais pu', 'ai pu', 'pourrai'],
+        tu: ['peux', 'pouvais', 'pus', 'avais pu', 'as pu', 'pourras'],
+        il: ['peut', 'pouvait', 'put', 'avait pu', 'a pu', 'pourra'],
+        nous: ['pouvons', 'pouvions', 'pûmes', 'avions pu', 'avons pu', 'pourrons'],
+        vous: ['pouvez', 'pouviez', 'pûtes', 'aviez pu', 'avez pu', 'pourrez'],
+        ils: ['peuvent', 'pouvaient', 'purent', 'avaient pu', 'ont pu', 'pourront']
+      },
+      vouloir: {
+        je: ['veux', 'voulais', 'voulus', 'avais voulu', 'ai voulu', 'voudrai'],
+        tu: ['veux', 'voulais', 'voulus', 'avais voulu', 'as voulu', 'voudras'],
+        il: ['veut', 'voulait', 'voulut', 'avait voulu', 'a voulu', 'voudra'],
+        nous: ['voulons', 'voulions', 'voulûmes', 'avions voulu', 'avons voulu', 'voudrons'],
+        vous: ['voulez', 'vouliez', 'voulûtes', 'aviez voulu', 'avez voulu', 'voudrez'],
+        ils: ['veulent', 'voulaient', 'voulurent', 'avaient voulu', 'ont voulu', 'voudront']
+      },
+      aller: {
+        je: ['vais', 'allais', 'allai', 'étais allé', 'suis allé', 'irai'],
+        tu: ['vas', 'allais', 'allas', 'étais allé', 'es allé', 'iras'],
+        il: ['va', 'allait', 'alla', 'était allé', 'est allé', 'ira'],
+        nous: ['allons', 'allions', 'allâmes', 'étions allés', 'sommes allés', 'irons'],
+        vous: ['allez', 'alliez', 'allâtes', 'étiez allés', 'êtes allés', 'irez'],
+        ils: ['allont', 'allaient', 'allèrent', 'étaient allés', 'sont allés', 'iront']
+      },
+      tenir: {
+        je: ['tiens', 'tenais', 'tins', 'avais tenu', 'ai tenu', 'tiendrai'],
+        tu: ['tiens', 'tenais', 'tins', 'avais tenu', 'as tenu', 'tiendras'],
+        il: ['tient', 'tenait', 'tint', 'avait tenu', 'a tenu', 'tiendra'],
+        nous: ['tenons', 'tenions', 'tînmes', 'avions tenu', 'avons tenu', 'tiendrons'],
+        vous: ['tenez', 'teniez', 'tîntes', 'aviez tenu', 'avez tenu', 'tiendrez'],
+        ils: ['tiennent', 'tenaient', 'tinrent', 'avaient tenu', 'ont tenu', 'tiendront']
+      },
+      venir: {
+        je: ['viens', 'venais', 'vins', 'étais venu', 'suis venu', 'viendrai'],
+        tu: ['viens', 'venais', 'vins', 'étais venu', 'es venu', 'viendras'],
+        il: ['vient', 'venait', 'vint', 'était venu', 'est venu', 'viendra'],
+        nous: ['venons', 'venions', 'vînmes', 'étions venus', 'sommes venus', 'viendrons'],
+        vous: ['venez', 'veniez', 'vînves', 'étiez venus', 'êtes venus', 'viendrez'],
+        ils: ['viennent', 'venaient', 'vinrent', 'étaient venus', 'sont venus', 'viendront']
+      },
+      prendre: {
+        je: ['prends', 'prenais', 'pris', 'avais prit', 'ai prit', 'prendrai'],
+        tu: ['prends', 'prenais', 'pris', 'avais prit', 'as prit', 'pendras'],
+        il: ['prend', 'prenait', 'prit', 'avait prit', 'a prit', 'prendra'],
+        nous: ['prenons', 'prenions', 'prîmes', 'avions prit', 'avons prit', 'prendrons'],
+        vous: ['prenez', 'preniez', 'prîtes', 'aviez prit', 'avez prit', 'prendrez'],
+        ils: ['prennent', 'prenaient', 'prirent', 'avaient prit', 'ont prit', 'prendront']
+      },
+      // Ajoutez d'autres verbes selon vos besoins
+    };
+
+    function searchVerb() {
+      const searchInput = $('#search-bar').val().toLowerCase();
+      const verbKeys = Object.keys(verbData);
+
+      // Recherche le verbe
+      const foundVerb = verbKeys.find(verb => verb.toLowerCase() === searchInput);
+
+      const errorMessage = $('#error-message');
+
+      if (foundVerb) {
+        displayConjugation(foundVerb);
+        errorMessage.text(''); // Efface le message d'erreur s'il y en a un
+      } else {
+        $('#conjugation-table').hide();
+        $('#download-button').hide(); // Cache le bouton de téléchargement
+        errorMessage.text('Verbe introuvable, veuillez réassayer');
+      }
+    }
+
+    function displayConjugation(verb) {
+      const conjugationTable = $('#conjugation-table');
+      const verbTitle = $('#verb-title');
+      const conjugationBody = $('#conjugation-body');
+
+      verbTitle.text(verb);
+      conjugationBody.empty();
+
+      // Génère le tableau de conjugaison
+      const conjugation = verbData[verb];
+      Object.keys(conjugation).forEach(pronoun => {
+        const row = `<tr>
+          <td>${pronoun}</td>
+          <td>${conjugation[pronoun][0]}</td>
+          <td>${conjugation[pronoun][1]}</td>
+          <td>${conjugation[pronoun][2]}</td>
+          <td>${conjugation[pronoun][3]}</td>
+          <td>${conjugation[pronoun][4]}</td>
+          <td>${conjugation[pronoun][5]}</td>
+        </tr>`;
+        conjugationBody.append(row);
+      });
+
+      conjugationTable.show();
+      $('#download-button').show(); // Affiche le bouton de téléchargement
+    }
+
+    function downloadImage() {
+      const tableContainer = document.getElementById('conjugation-table');
+      html2canvas(tableContainer).then(canvas => {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL();
+        link.download = 'tableau de conjugaison.png';
+        link.click();
+      });
+    }
+  </script>
+
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+</html>
+
